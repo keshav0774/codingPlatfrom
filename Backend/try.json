@@ -1,0 +1,60 @@
+{
+  "title": "Height of a Binary Search Tree",
+  "description": "Given the root of a Binary Search Tree (BST), return the height of the tree. Height is defined as the number of edges on the longest path from root to a leaf node.",
+  "difficulty": "Easy",
+  "tags": ["tree"],
+  "visibleTestCases": [
+    {
+      "input": "[10,5,15,2,7,12,20]",
+      "output": "2",
+      "explanation": "Longest path: 10 -> 15 -> 20 or 10 -> 5 -> 2"
+    },
+    {
+      "input": "[5,3,8,1,4,7,9]",
+      "output": "2",
+      "explanation": "Longest path has 2 edges"
+    }
+  ],
+  "hiddenTestCases": [
+    {
+      "input": "[1,2,3,4,5]",
+      "output": "4"
+    },
+    {
+      "input": "[10,5,15,null,null,12,20]",
+      "output": "2"
+    }
+  ],
+  "startCode": [
+    {
+      "language": "cpp",
+      "initialCode": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode* left;\n    TreeNode* right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\nclass Solution {\npublic:\n    int height(TreeNode* root) {\n        // Write your code here\n        return 0;\n    }\n};\n\nint main() {\n    return 0;\n}"
+    },
+
+    {
+      "language": "javascript",
+      "initialCode": "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\n\nvar height = function(root) {\n    // Write your code here\n};"
+    },
+    {
+      "language": "python",
+      "initialCode": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\nclass Solution:\n    def height(self, root: Optional[TreeNode]) -> int:\n        # Write your code here\n        return 0"
+    }
+  ],
+  "referenceSolution": [
+    {
+      "language": "cpp",
+      "completeCode": "#include <bits/stdc++.h>\nusing namespace std;\n\nstruct TreeNode {\n    int val;\n    TreeNode* left;\n    TreeNode* right;\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n};\n\nclass Solution {\npublic:\n    int height(TreeNode* root) {\n        if (!root) return -1;\n        return 1 + max(height(root->left), height(root->right));\n    }\n};\n\nint main() {\n    return 0;\n}"
+    },
+
+    {
+      "language": "javascript",
+      "completeCode": "function TreeNode(val, left, right) {\n    this.val = (val===undefined ? 0 : val);\n    this.left = (left===undefined ? null : left);\n    this.right = (right===undefined ? null : right);\n}\n\nvar height = function(root) {\n    if (!root) return -1;\n    return 1 + Math.max(height(root.left), height(root.right));\n};"
+    },
+    {
+      "language": "python",
+      "completeCode": "class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def height(self, root: Optional[TreeNode]) -> int:\n        if not root:\n            return -1\n        return 1 + max(self.height(root.left), self.height(root.right))"
+    }
+  ],
+  "problemCreator": "PUT_ADMIN_USER_OBJECT_ID_HERE"
+}
+
