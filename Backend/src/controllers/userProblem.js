@@ -92,43 +92,6 @@ const updateProblem = async (req,res)=>{
     if(!DsaProblem){
       return res.status(400).send("Id is not present in server")
     }
-  //  for (const { language, completeCode } of referenceSolution) {
-    
-
-  //     const languageId = getLanguageById(language);
-     
-  //     if (!languageId) {
-  //       return res.status(400).send("Invalid LanguageID solution");
-  //     }
-      
-  //     if (!completeCode) {
-  //       return res.status(400).send("Invalid CompleteCode solution");
-  //     }
-  //     // ---- VISIBLE TEST CASES ----
-  //     const visibleSubmissions = visibleTestCases.map(tc => ({
-  //       source_code: completeCode,
-  //       language_id: languageId,
-  //       stdin: tc.input,
-  //       expected_output: tc.output
-  //     }));
-
-  //     const visibleResult = await submitBatched(visibleSubmissions);
-  //     if (!Array.isArray(visibleResult)) {
-  //        return res.status(500).send("Judge API failed for visible testcases");
-  //       }
-  //     const visibleTokens = visibleResult.map(r => r.token);
-  //     const visibleStatus = await submitToken(visibleTokens);
-      
-
-  //     for (const test of visibleStatus) {
-  //       if (test.status_id === 6 || test.status_id === 7) {
-  //         return res
-  //           .status(400)
-  //           .send(`Reference solution error: ${getStatusDescription(test.status_id)}`);
-  //       }
-  //     }
-      
-  //   }
 
   const newProblem =   await Problem.findByIdAndUpdate(id, {...req.body}, {runValidators:true});
   res.status(200).send(newProblem);

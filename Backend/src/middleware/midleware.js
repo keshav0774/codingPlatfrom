@@ -33,7 +33,7 @@ const userMiddleware = async (req,res,next)=>{
        res.status(403).send("Unauthorized");
     }
 
-    //Check the Redis Blacklist if token already present then logout it.
+
 
 }
 
@@ -69,7 +69,6 @@ const adminMiddleware = async (req,res,next)=>{
         res.status(403).send("Unauthorized");
     }
 
-    //Check the Redis Blacklist if token already present then logout it.
 
 }
 

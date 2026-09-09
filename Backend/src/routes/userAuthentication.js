@@ -2,8 +2,9 @@ const express = require('express');
 const authRouter = express.Router();
 const {register,login,logout,getProfile, emailVerify, adminRegister,deleteProfile,forgetPassword, verifyOtp} = require('../controllers/userauthenticate');
 const {userMiddleware,adminMiddleware} = require('../middleware/midleware');
-//Register
-// backend/routes/userRoutes.js
+
+
+
 authRouter.post('/register', register);
 authRouter.post('/login', login);
 authRouter.post('/verifyOtp', verifyOtp)

@@ -75,9 +75,7 @@ const submitCode = async (req,res)=>{
 
        const result =  await submittedResult.save();
        
-       //inserr the problem id in user schema problemSolved if it is already present and 
-       // it other wise insert the problem 
-       // req.result === User Information 
+       
 
      if(!req.result.problemSolved.includes(ProblemId)){
         req.result.problemSolved.push(ProblemId);

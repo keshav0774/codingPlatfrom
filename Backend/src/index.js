@@ -19,15 +19,10 @@ const cors = require('cors');
 const chat = require('./routes/ai');
 
 
-// app.use(cors({
-//     origin:  'http://localhost:5173',
-//     credentials:true,
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-// })) // connection between forntend & backend 
 
 
 app.use(cookieparser());
-app.use(express.json());   // COnvert req.body which is in json format into js object 
+app.use(express.json());   
 
 
 

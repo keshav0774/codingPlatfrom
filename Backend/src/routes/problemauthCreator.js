@@ -13,9 +13,8 @@ problemRouter.get('/problemById/:id',userMiddleware, getProblemById)
 problemRouter.get('/getAllProblem',getAllProblem);
 problemRouter.get('/problemSolvedByUser',userMiddleware, solvedAllProblembyUser)
 problemRouter.get("/submittedProblem/:pid",userMiddleware,submittedProblem)
-// problemCreate ,  problemUpdate,  problemDelete, problemFetch,getAllProblem,solvedProblem
+
 
 module.exports = problemRouter;
 
 
-// update
