@@ -1,324 +1,1047 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import axiosClient from "../utils/axiosClient";
-import ProblemPage from "./problemPage";
 import { logoutUserAPI } from "./authSlice";
-import AuthModal from '../components/authModel'
+import AuthModal from "../components/authModel";
 
 function Home() {
-   const dispatch = useDispatch();
-   const navigate = useNavigate();
-   const { user, isAuthenticated } = useSelector((state) => state.auth);
-   const [showAuthModal, setShowAuthModal] = useState(false);
-   const [problem, setProblem] = useState([]);
-   const [solvedProblem, setSolvedProblem] = useState([]);
-   const [filterProblem, setFilterProblem] = useState([]);
-   const [currentFilter, setCurrentFilter] = useState('All');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-   useEffect(() => {
-      const fetchProblem = async () => {
-         try {
-            const { data } = await axiosClient.get('/problem/getAllProblem');
-            setProblem(data);
-            setFilterProblem(data);
-         } catch (error) {
-            console.log("Problem fetch error:", error.message);
-         }
-      };
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-      const fetchSolvedProblems = async () => {
-         try {
-            const { data } = await axiosClient.get('/problem/problemSolvedByUser');
-            setSolvedProblem(data);
-         } catch (error) {
-            console.log("Error fetching Solved problems:", error.message);
-         }
-      };
-      
-      fetchProblem();
-      if (user) fetchSolvedProblems();
-   }, [user]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [problem, setProblem] = useState([]);
+  const [solvedProblem, setSolvedProblem] = useState([]);
+  const [filterProblem, setFilterProblem] = useState([]);
+  const [currentFilter, setCurrentFilter] = useState("All");
+  const [search, setSearch] = useState("");
 
-   const handleLogout = async () => {
+  // ----------------------------------------------------
+  // FETCH PROBLEMS
+  // ----------------------------------------------------
+
+  useEffect(() => {
+    const fetchProblem = async () => {
       try {
-         dispatch(logoutUserAPI());
-         setSolvedProblem([]);
-         navigate('/');
-         console.log("navigate through home.jsx")
-      } catch (err) {
-         console.log("Logout error:", err);
-      }
-   };
+        const { data } = await axiosClient.get(
+          "/problem/getAllProblem"
+        );
 
-   const onlineUsers = useMemo(() => {
-      const num = Math.random() * (9 - 1) + 1;
-      return Number(num.toFixed(1));
-   }, []);
-
-   const handleFilterClick = (filter) => {
-      setCurrentFilter(filter);
-      if (filter === 'All') {
-         setFilterProblem(problem);
-      } else {
-         const filtered = problem.filter(p => p.difficulty === filter);
-         setFilterProblem(filtered);
+        setProblem(data);
+        setFilterProblem(data);
+      } catch (error) {
+        console.log("Problem fetch error:", error.message);
       }
-   };
+    };
+
+    const fetchSolvedProblems = async () => {
+      try {
+        const { data } = await axiosClient.get(
+          "/problem/problemSolvedByUser"
+        );
+
+        setSolvedProblem(data);
+      } catch (error) {
+        console.log(
+          "Error fetching Solved problems:",
+          error.message
+        );
+      }
+    };
+
+    fetchProblem();
+
+    if (user) {
+      fetchSolvedProblems();
+    }
+  }, [user]);
+
+  // ----------------------------------------------------
+  // LOGOUT
+  // ----------------------------------------------------
+
+  const handleLogout = async () => {
+    try {
+      dispatch(logoutUserAPI());
+
+      setSolvedProblem([]);
+
+      navigate("/");
+    } catch (err) {
+      console.log("Logout error:", err);
+    }
+  };
+
+  // ----------------------------------------------------
+  // FILTER
+  // ----------------------------------------------------
+
+  const handleFilterClick = (filter) => {
+    setCurrentFilter(filter);
+
+    let filtered = problem;
+
+    if (filter !== "All") {
+      filtered = problem.filter(
+        (p) => p.difficulty === filter
+      );
+    }
+
+    if (search.trim()) {
+      filtered = filtered.filter((p) =>
+        p.title
+          ?.toLowerCase()
+          .includes(search.toLowerCase())
+      );
+    }
+
+    setFilterProblem(filtered);
+  };
+
+  // ----------------------------------------------------
+  // SEARCH
+  // ----------------------------------------------------
+
+  const handleSearch = (value) => {
+    setSearch(value);
+
+    let filtered = problem;
+
+    if (currentFilter !== "All") {
+      filtered = filtered.filter(
+        (p) => p.difficulty === currentFilter
+      );
+    }
+
+    if (value.trim()) {
+      filtered = filtered.filter((p) =>
+        p.title
+          ?.toLowerCase()
+          .includes(value.toLowerCase())
+      );
+    }
+
+    setFilterProblem(filtered);
+  };
+
+  // ----------------------------------------------------
+  // OPEN PROBLEM
+  // ----------------------------------------------------
 
   const openProblemPage = (problemId) => {
-  if (!isAuthenticated) {
-    setShowAuthModal(true);
-    return;
-  }
-  navigate(`/problem/${problemId}`);
-};
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
 
-   const getDifficultyColor = (difficulty) => {
-      switch (difficulty) {
-         case "Easy":   return "bg-[#32d74b1a] text-[#32d74b] border border-[#32d74b30]";
-         case "Medium": return "bg-[#ff9f0a1a] text-[#ff9f0a] border border-[#ff9f0a30]";
-         case "Hard":   return "bg-[#ff453a1a] text-[#ff453a] border border-[#ff453a30]";
-         default:       return "bg-[#1c1c1e] text-[#98989d] border border-[#ffffff10]";
-      }
-   };
+    navigate(`/problem/${problemId}`);
+  };
 
-   const userInitial = user?.firstName?.charAt(0).toUpperCase() || "U";
+  // ----------------------------------------------------
+  // MONOCHROME DIFFICULTY
+  // ----------------------------------------------------
 
-   return (
-      <div className="min-h-screen bg-black text-[#f5f5f7] font-sans" style={{ WebkitFontSmoothing: 'antialiased' }}>
+  const getDifficultyStyle = (difficulty) => {
+    switch (difficulty) {
+      case "Easy":
+        return "bg-white text-black border-white";
 
-         {/* ── Navbar ── */}
-         <nav className="sticky top-0 z-50 border-b border-[#ffffff0f]"
-              style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)' }}>
-            <div className="max-w-5xl mx-auto px-7 h-[52px] flex justify-between items-center">
+      case "Medium":
+        return "bg-[#262626] text-white border-[#3a3a3a]";
 
-               {/* Logo */}
-               <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => navigate('/')}>
-                  <div className="w-7 h-7 bg-white text-black flex items-center justify-center text-[10px] font-medium rounded-[7px] transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
-                       style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                     &lt;/&gt;
-                  </div>
-                  <span className="font-semibold text-[15px] tracking-tight text-white">CodeIt</span>
-               </div>
+      case "Hard":
+        return "bg-black text-white border-[#4a4a4a]";
 
-               {/* Right side: Admin button + Avatar (or Login/Signup if not authenticated) */}
-               <div className="flex items-center gap-2.5">
+      default:
+        return "bg-[#171717] text-[#a3a3a3] border-[#2a2a2a]";
+    }
+  };
 
-                  {isAuthenticated ? (
-                     <>
-                        {/* Admin Panel — only visible to admins */}
-                        {user?.role === "Admin" && (
-                           <button
-                              onClick={() => navigate('/admin')}
-                              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c1e] border border-[#ffffff18] text-[11px] font-medium text-[#98989d] hover:text-white hover:border-[#ffffff30] hover:bg-[#2a2a2e] transition-all duration-200"
-                           >
-                              <span className="text-[10px]">⚙️</span>
-                              Admin Panel
-                           </button>
+  const userInitial =
+    user?.firstName?.charAt(0).toUpperCase() || "U";
+
+  return (
+    <div
+      className="min-h-screen bg-[#080808] text-white"
+      
+    >
+   
+
+      <nav
+        className="sticky top-0 z-50 border-b border-white/[0.08]"
+        style={{
+          background: "rgba(8,8,8,0.86)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 h-[64px] flex items-center justify-between">
+
+          {/* LOGO */}
+
+          <div
+            onClick={() => navigate("/")}
+            className="flex items-center gap-3 cursor-pointer group"
+          >
+            <div
+              className="
+              w-9 h-9
+              rounded-xl
+              bg-white
+              text-black
+              flex items-center justify-center
+              text-[11px]
+              font-bold
+              transition-all duration-300
+              group-hover:scale-105
+              "
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              &lt;/&gt;
+            </div>
+
+            <span className="text-[17px] font-semibold tracking-[-0.03em]">
+              CodeIt
+            </span>
+          </div>
+
+          {/* NAV RIGHT */}
+
+          <div className="flex items-center gap-2">
+
+            {isAuthenticated ? (
+              <>
+                {user?.role === "Admin" && (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className="
+                    hidden sm:block
+                    px-4 py-2
+                    rounded-lg
+                    text-[13px]
+                    text-[#a3a3a3]
+                    hover:text-white
+                    hover:bg-white/[0.06]
+                    transition-all
+                    "
+                  >
+                    Admin
+                  </button>
+                )}
+
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="
+                  hidden sm:block
+                  px-4 py-2
+                  rounded-lg
+                  text-[13px]
+                  text-[#a3a3a3]
+                  hover:text-white
+                  hover:bg-white/[0.06]
+                  transition-all
+                  "
+                >
+                  Profile
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="
+                  ml-1
+                  w-9 h-9
+                  rounded-full
+                  bg-[#171717]
+                  border border-white/[0.12]
+                  flex items-center justify-center
+                  text-[13px]
+                  font-semibold
+                  text-white
+                  hover:bg-white
+                  hover:text-black
+                  transition-all duration-300
+                  "
+                >
+                  {userInitial}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="
+                bg-white
+                text-black
+                px-5 py-2
+                rounded-lg
+                text-[13px]
+                font-semibold
+                hover:bg-[#e5e5e5]
+                transition-all duration-200
+                "
+              >
+                Login / Signup
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* =====================================================
+                            HERO
+      ===================================================== */}
+
+      <section className="relative overflow-hidden border-b border-white/[0.07]">
+
+        {/* subtle background glow */}
+
+        <div
+          className="
+          pointer-events-none
+          absolute
+          top-[-250px]
+          left-1/2
+          -translate-x-1/2
+          w-[850px]
+          h-[500px]
+          rounded-full
+          bg-white/[0.035]
+          blur-[120px]
+          "
+        />
+
+        <div className="relative max-w-6xl mx-auto px-6 lg:px-8 pt-20 pb-16">
+
+          {/* BADGE */}
+
+          <div className="flex justify-center mb-7">
+            <div
+              className="
+              inline-flex items-center gap-2
+              border border-white/[0.1]
+              bg-white/[0.035]
+              rounded-full
+              px-4 py-2
+              text-[10px]
+              font-medium
+              tracking-[0.2em]
+              uppercase
+              text-[#888]
+              "
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+
+              Practice · Build · Ship
+            </div>
+          </div>
+
+          {/* HERO TEXT */}
+
+          <div className="text-center max-w-3xl mx-auto">
+
+            <h1
+              className="
+              text-[42px]
+              sm:text-[55px]
+              md:text-[66px]
+              font-semibold
+              leading-[1.02]
+              tracking-[-0.055em]
+              "
+            >
+              Code. Test.
+              <span className="text-[#777]"> Improve.</span>
+            </h1>
+
+            <p
+              className="
+              mt-6
+              text-[15px]
+              sm:text-[16px]
+              leading-7
+              text-[#888]
+              max-w-xl
+              mx-auto
+              "
+            >
+              Solve programming challenges, test your code
+              instantly and sharpen your problem-solving skills.
+            </p>
+
+            <div className="mt-8 flex justify-center gap-3">
+
+              <button
+                onClick={() => {
+                  document
+                    .getElementById("problems")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                }}
+                className="
+                bg-white
+                text-black
+                px-6 py-2.5
+                rounded-lg
+                text-[13px]
+                font-semibold
+                hover:bg-[#dedede]
+                transition-all
+                "
+              >
+                Start solving
+              </button>
+
+              {!isAuthenticated && (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="
+                  border border-white/[0.14]
+                  bg-white/[0.04]
+                  px-6 py-2.5
+                  rounded-lg
+                  text-[13px]
+                  text-[#c5c5c5]
+                  hover:bg-white/[0.08]
+                  hover:text-white
+                  transition-all
+                  "
+                >
+                  Create account
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* =====================================================
+                          FEATURE CARDS
+          ===================================================== */}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-16">
+
+            {/* RUN */}
+
+            <div
+              className="
+              group
+              relative
+              bg-[#101010]
+              border border-white/[0.08]
+              rounded-2xl
+              p-6
+              hover:border-white/[0.17]
+              hover:bg-[#131313]
+              transition-all duration-300
+              "
+            >
+              <div
+                className="
+                w-10 h-10
+                rounded-xl
+                bg-white
+                text-black
+                flex items-center justify-center
+                mb-5
+                text-[16px]
+                font-bold
+                "
+              >
+                ▶
+              </div>
+
+              <h3 className="text-[16px] font-semibold tracking-tight">
+                Run
+              </h3>
+
+              <p className="text-[#777] text-[13px] leading-6 mt-2">
+                Execute your code instantly and validate your
+                solution against test cases.
+              </p>
+
+              <div className="mt-5 text-[12px] text-[#555] group-hover:text-white transition-colors">
+                Execute code →
+              </div>
+            </div>
+
+            {/* DEBUG */}
+
+            <div
+              className="
+              group
+              bg-[#101010]
+              border border-white/[0.08]
+              rounded-2xl
+              p-6
+              hover:border-white/[0.17]
+              hover:bg-[#131313]
+              transition-all duration-300
+              "
+            >
+              <div
+                className="
+                w-10 h-10
+                rounded-xl
+                border border-white/[0.15]
+                bg-[#181818]
+                flex items-center justify-center
+                mb-5
+                text-[16px]
+                "
+              >
+                ◇
+              </div>
+
+              <h3 className="text-[16px] font-semibold tracking-tight">
+                Debug
+              </h3>
+
+              <p className="text-[#777] text-[13px] leading-6 mt-2">
+                Find problems faster and understand exactly
+                where your solution goes wrong.
+              </p>
+
+              <div className="mt-5 text-[12px] text-[#555] group-hover:text-white transition-colors">
+                Find bugs →
+              </div>
+            </div>
+
+            {/* SUBMIT */}
+
+            <div
+              className="
+              group
+              bg-[#101010]
+              border border-white/[0.08]
+              rounded-2xl
+              p-6
+              hover:border-white/[0.17]
+              hover:bg-[#131313]
+              transition-all duration-300
+              "
+            >
+              <div
+                className="
+                w-10 h-10
+                rounded-xl
+                border border-white/[0.15]
+                bg-[#181818]
+                flex items-center justify-center
+                mb-5
+                text-[17px]
+                "
+              >
+                ✓
+              </div>
+
+              <h3 className="text-[16px] font-semibold tracking-tight">
+                Submit
+              </h3>
+
+              <p className="text-[#777] text-[13px] leading-6 mt-2">
+                Submit your solution and receive instant
+                execution results and feedback.
+              </p>
+
+              <div className="mt-5 text-[12px] text-[#555] group-hover:text-white transition-colors">
+                Submit solution →
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+                          PROBLEMS
+      ===================================================== */}
+
+      <main
+        id="problems"
+        className="max-w-6xl mx-auto px-6 lg:px-8 py-16"
+      >
+
+        {/* HEADING */}
+
+        <div className="mb-8">
+
+          <div className="flex items-center gap-3">
+
+            <h2
+              className="
+              text-[26px]
+              font-semibold
+              tracking-[-0.035em]
+              "
+            >
+              Problems
+            </h2>
+
+            <span
+              className="
+              bg-[#171717]
+              border border-white/[0.08]
+              text-[#777]
+              text-[11px]
+              px-2.5 py-1
+              rounded-full
+              "
+            >
+              {filterProblem.length}
+            </span>
+          </div>
+
+          <p className="text-[#666] text-[13px] mt-2">
+            Choose a problem and start solving.
+          </p>
+        </div>
+
+        {/* =====================================================
+                          SEARCH + FILTER
+        ===================================================== */}
+
+        <div
+          className="
+          flex
+          flex-col
+          md:flex-row
+          md:items-center
+          justify-between
+          gap-3
+          mb-5
+          "
+        >
+
+          {/* SEARCH */}
+
+          <div className="relative w-full md:w-[340px]">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="
+              absolute
+              left-3.5
+              top-1/2
+              -translate-y-1/2
+              w-4 h-4
+              text-[#555]
+              "
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+
+            <input
+              value={search}
+              onChange={(e) =>
+                handleSearch(e.target.value)
+              }
+              placeholder="Search problems..."
+              className="
+              w-full
+              bg-[#101010]
+              border border-white/[0.09]
+              rounded-xl
+              pl-10 pr-4 py-2.5
+              text-[13px]
+              text-white
+              placeholder:text-[#4f4f4f]
+              outline-none
+              focus:border-white/[0.22]
+              focus:bg-[#121212]
+              transition-all
+              "
+            />
+          </div>
+
+          {/* FILTER */}
+
+          <div
+            className="
+            flex
+            items-center
+            gap-1
+            p-1
+            bg-[#101010]
+            border border-white/[0.08]
+            rounded-xl
+            "
+          >
+            {["All", "Easy", "Medium", "Hard"].map(
+              (filter) => (
+                <button
+                  key={filter}
+                  onClick={() =>
+                    handleFilterClick(filter)
+                  }
+                  className={`
+                    px-4
+                    py-1.5
+                    rounded-lg
+                    text-[12px]
+                    font-medium
+                    transition-all duration-200
+
+                    ${
+                      currentFilter === filter
+                        ? "bg-white text-black"
+                        : "text-[#666] hover:text-white hover:bg-white/[0.05]"
+                    }
+                  `}
+                >
+                  {filter}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* =====================================================
+                          TABLE
+        ===================================================== */}
+
+        <div
+          className="
+          bg-[#0d0d0d]
+          border border-white/[0.08]
+          rounded-2xl
+          overflow-hidden
+          "
+        >
+
+          {/* HEADER */}
+
+          <div
+            className="
+            hidden
+            md:grid
+            grid-cols-12
+            px-6 py-3
+            bg-white/[0.02]
+            border-b border-white/[0.07]
+            text-[10px]
+            uppercase
+            tracking-[0.14em]
+            font-semibold
+            text-[#505050]
+            "
+          >
+            <div className="col-span-6">
+              Problem
+            </div>
+
+            <div className="col-span-3">
+              Difficulty
+            </div>
+
+            <div className="col-span-3">
+              Tags
+            </div>
+          </div>
+
+          {/* ROWS */}
+
+          {filterProblem.length > 0 ? (
+            filterProblem.map((problem, index) => {
+
+              const isSolved = solvedProblem?.some(
+                (solved) =>
+                  solved._id === problem._id ||
+                  solved.problemId === problem._id
+              );
+
+              return (
+                <div
+                  key={problem._id}
+                  onClick={() =>
+                    openProblemPage(problem._id)
+                  }
+                  className="
+                  group
+                  grid
+                  grid-cols-1
+                  md:grid-cols-12
+                  md:items-center
+                  gap-3
+                  px-5 md:px-6
+                  py-4
+                  border-b border-white/[0.055]
+                  last:border-none
+                  hover:bg-white/[0.035]
+                  cursor-pointer
+                  transition-all duration-200
+                  "
+                >
+
+                  {/* TITLE */}
+
+                  <div className="md:col-span-6 flex items-center gap-4">
+
+                    <div
+                      className="
+                      text-[11px]
+                      font-mono
+                      text-[#3f3f3f]
+                      w-6
+                      "
+                    >
+                      {String(index + 1).padStart(
+                        2,
+                        "0"
+                      )}
+                    </div>
+
+                    <div>
+
+                      <div className="flex items-center gap-2">
+
+                        <h3
+                          className="
+                          text-[13.5px]
+                          font-medium
+                          text-[#bdbdbd]
+                          group-hover:text-white
+                          transition-colors
+                          "
+                        >
+                          {problem.title}
+                        </h3>
+
+                        {isSolved && (
+                          <span
+                            title="Solved"
+                            className="
+                            w-4 h-4
+                            rounded-full
+                            bg-white
+                            text-black
+                            text-[9px]
+                            flex items-center
+                            justify-center
+                            font-bold
+                            "
+                          >
+                            ✓
+                          </span>
                         )}
-
-                        {/* Profile */}
-                        <button
-                           onClick={() => navigate("/profile")}
-                           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c1e] border border-[#ffffff18] text-[11px] font-medium text-[#98989d] hover:text-white hover:border-[#ffffff30] hover:bg-[#2a2a2e] transition-all duration-200"
-                        >
-                           <span className="text-[10px]">👤</span>
-                           Profile
-                        </button>
-
-                        {/* Avatar / Logout */}
-                        <button
-                           onClick={handleLogout}
-                           title="Logout"
-                           className="relative w-[30px] h-[30px] rounded-full bg-[#1c1c1e] border border-[#ffffff1a] flex items-center justify-center text-[12px] font-semibold text-[#98989d] transition-all duration-250 hover:border-[#ff453a55] hover:bg-[#ff453a14] focus:outline-none overflow-hidden group"
-                        >
-                           <span className="group-hover:opacity-0 transition-opacity duration-200">{userInitial}</span>
-                           <span className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[13px]">↩</span>
-                        </button>
-                     </>
-                  ) : (
-                     /* Not authenticated — single Login/Signup trigger */
-                     <button
-                        onClick={() => setShowAuthModal(true)}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-black text-[11px] font-semibold hover:bg-[#e5e5e5] transition-all duration-200"
-                     >
-                        Login / Signup
-                     </button>
-                  )}
-
-               </div>
-            </div>
-         </nav>
-
-         {/* ── Main ── */}
-         <main className="max-w-5xl mx-auto px-7 py-14">
-
-            {/* Status pill */}
-            <div className="mb-10">
-               <span className="inline-flex items-center gap-2 bg-[#1c1c1e] border border-[#ffffff1a] rounded-full px-3 py-1 text-[11px] font-medium tracking-widest uppercase text-[#48484a]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#32d74b] inline-block"></span>
-                  Practice · Build · Ship
-               </span>
-            </div>
-
-            {/* ── 3 Cards ── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 mb-14"
-                 style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden', gap: '1px', background: 'rgba(255,255,255,0.06)' }}>
-
-               {/* Run */}
-               <div className="group bg-[#111111] p-7 cursor-pointer transition-colors duration-200 hover:bg-[#161616] relative overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffffff0f] to-transparent"></div>
-                  <div className="text-[1.4rem] mb-4 inline-block transition-transform duration-300 group-hover:scale-110">⚡</div>
-                  <h3 className="text-[15px] font-semibold text-white mb-1.5 tracking-tight">Run</h3>
-                  <p className="text-[#98989d] text-[13px] leading-relaxed mb-5">
-                     Execute code instantly across 20+ languages with zero setup.
-                  </p>
-                  <button className="text-[#48484a] text-[12px] font-medium flex items-center gap-1 transition-colors duration-200 group-hover:text-[#98989d] border-none bg-none">
-                     Try it now
-                     <span className="opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-250 inline-block">→</span>
-                  </button>
-               </div>
-
-               {/* Debug */}
-               <div className="group bg-[#111111] p-7 cursor-pointer transition-colors duration-200 hover:bg-[#161616] relative overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffffff0f] to-transparent"></div>
-                  <div className="text-[1.4rem] mb-4 inline-block transition-transform duration-300 group-hover:scale-110">🔬</div>
-                  <h3 className="text-[15px] font-semibold text-white mb-1.5 tracking-tight">Debug</h3>
-                  <p className="text-[#98989d] text-[13px] leading-relaxed mb-5">
-                     Pinpoint and resolve bugs fast with our intelligent debugger.
-                  </p>
-                  <button className="text-[#48484a] text-[12px] font-medium flex items-center gap-1 transition-colors duration-200 group-hover:text-[#98989d] border-none bg-none">
-                     Start debugging
-                     <span className="opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-250 inline-block">→</span>
-                  </button>
-               </div>
-
-               {/* Submit */}
-               <div className="group bg-[#111111] p-7 cursor-pointer transition-colors duration-200 hover:bg-[#161616] relative overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffffff0f] to-transparent"></div>
-                  <div className="text-[1.4rem] mb-4 inline-block transition-transform duration-300 group-hover:scale-110">✦</div>
-                  <h3 className="text-[15px] font-semibold text-white mb-1.5 tracking-tight">Submit</h3>
-                  <p className="text-[#98989d] text-[13px] leading-relaxed mb-5">
-                     Submit solutions and receive instant runtime & memory feedback.
-                  </p>
-                  <button className="text-[#48484a] text-[12px] font-medium flex items-center gap-1 transition-colors duration-200 group-hover:text-[#98989d] border-none bg-none">
-                     View submissions
-                     <span className="opacity-0 -translate-x-1.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-250 inline-block">→</span>
-                  </button>
-               </div>
-            </div>
-
-            {/* ── Problems Header ── */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-               <div className="flex items-baseline gap-2.5">
-                  <h2 className="text-[16px] font-semibold text-white tracking-tight">Problems</h2>
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#1c1c1e] text-[#48484a]">
-                     {filterProblem.length}
-                  </span>
-               </div>
-
-               {/* Filter Buttons */}
-               <div className="flex gap-0.5 p-[3px] bg-[#111111] rounded-[9px] border border-[#ffffff1a]">
-                  {["All", "Easy", "Medium", "Hard"].map((filter) => (
-                     <button
-                        key={filter}
-                        onClick={() => handleFilterClick(filter)}
-                        className={`px-3.5 py-1 text-[12px] font-medium rounded-[6px] transition-all duration-200 ${
-                           currentFilter === filter
-                              ? "bg-[#1c1c1e] text-[#f5f5f7] border border-[#ffffff1a] shadow-sm"
-                              : "text-[#48484a] hover:text-[#98989d] hover:bg-[#1c1c1e]"
-                        }`}
-                     >
-                        {filter}
-                     </button>
-                  ))}
-               </div>
-            </div>
-
-            {/* ── Problems Table ── */}
-            <div className="bg-[#111111] border border-[#ffffff0f] rounded-[14px] overflow-hidden">
-
-               {/* Table Header */}
-               <div className="grid grid-cols-12 px-5 py-2.5 border-b border-[#ffffff0a] text-[10px] uppercase tracking-[0.08em] font-medium text-[#48484a]">
-                  <div className="col-span-6">Title</div>
-                  <div className="col-span-3">Difficulty</div>
-                  <div className="col-span-3">Tags</div>
-               </div>
-
-               {/* Rows */}
-               <div>
-                  {filterProblem.length > 0 ? (
-                     filterProblem.map((problem) => (
-                        <div
-                           onClick={() => openProblemPage(problem._id)} 
-                           key={problem._id}
-                           className="grid grid-cols-12 items-center px-5 py-3 border-b border-[#ffffff08] last:border-b-0 hover:bg-[#161616] transition-colors duration-150 cursor-pointer group"
-                        >
-                           <div className="col-span-6 pr-4">
-                              <h3 onClick={() => openProblemPage(problem._id)}
-                              className="text-[#98989d] text-[13.5px] font-[450] group-hover:text-[#f5f5f7] transition-colors duration-200">
-                                 
-                                 {problem.title}
-                              </h3>
-                           </div>
-                           <div className="col-span-3">
-                              <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${getDifficultyColor(problem.difficulty)}`}>
-                                 {problem.difficulty}
-                              </span>
-                           </div>
-                           <div className="col-span-3">
-                              <div className="flex flex-wrap gap-1">
-                                 {Array.isArray(problem.tags) ? (
-                                    problem.tags.map((tag, idx) => (
-                                       <span key={idx} className="text-[11px] bg-[#1c1c1e] border border-[#ffffff0a] text-[#48484a] px-2 py-0.5 rounded-[5px] font-medium">
-                                          {tag}
-                                       </span>
-                                    ))
-                                 ) : (
-                                    <span className="text-[11px] bg-[#1c1c1e] border border-[#ffffff0a] text-[#48484a] px-2 py-0.5 rounded-[5px] font-medium">
-                                       {problem.tags || "No tags"}
-                                    </span>
-                                 )}
-                              </div>
-                           </div>
-                        </div>
-                     ))
-                  ) : (
-                     <div className="px-5 py-12 text-center text-[#48484a] text-[13px]">
-                        No problems found.
-                     </div>
-                  )}
-               </div>
-            </div>
-
-            {/* ── Online Users ── */}
-            <div className="flex justify-center items-center gap-2 text-[12px] text-[#48484a] mt-10">
-               <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#32d74b] opacity-60"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#32d74b]"></span>
-               </span>
-               {onlineUsers}k developers online
-            </div>
-         </main>
-
-         {/* ── Footer ── */}
-         <footer className="border-t border-[#ffffff0a] py-7 mt-auto">
-            <div className="max-w-5xl mx-auto px-7">
-               <div className="flex flex-col md:flex-row justify-between items-center gap-3">
-                  <span className="text-[12px] text-[#48484a]">© 2024 CodeIt. All rights reserved.</span>
-                  <div className="flex gap-5 text-[12px] text-[#48484a]">
-                     <a href="#" className="hover:text-[#98989d] transition-colors duration-200">Terms</a>
-                     <a href="#" className="hover:text-[#98989d] transition-colors duration-200">Privacy</a>
-                     <a href="#" className="hover:text-[#98989d] transition-colors duration-200">Contact</a>
+                      </div>
+                    </div>
                   </div>
-               </div>
-            </div>
-         </footer>
 
-         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
-      </div>
-   );
+                  {/* DIFFICULTY */}
+
+                  <div className="md:col-span-3">
+
+                    <span
+                      className={`
+                      inline-flex
+                      items-center
+                      px-2.5
+                      py-1
+                      rounded-md
+                      border
+                      text-[10px]
+                      font-semibold
+                      ${getDifficultyStyle(
+                        problem.difficulty
+                      )}
+                      `}
+                    >
+                      {problem.difficulty}
+                    </span>
+                  </div>
+
+                  {/* TAGS */}
+
+                  <div className="md:col-span-3">
+
+                    <div className="flex flex-wrap gap-1.5">
+
+                      {Array.isArray(problem.tags) ? (
+                        problem.tags.map(
+                          (tag, idx) => (
+                            <span
+                              key={idx}
+                              className="
+                              bg-[#151515]
+                              border border-white/[0.07]
+                              text-[#666]
+                              px-2
+                              py-1
+                              rounded-md
+                              text-[10px]
+                              font-medium
+                              "
+                            >
+                              {tag}
+                            </span>
+                          )
+                        )
+                      ) : (
+                        <span
+                          className="
+                          bg-[#151515]
+                          border border-white/[0.07]
+                          text-[#666]
+                          px-2
+                          py-1
+                          rounded-md
+                          text-[10px]
+                          "
+                        >
+                          {problem.tags ||
+                            "No tags"}
+                        </span>
+                      )}
+
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+
+            /* EMPTY STATE */
+
+            <div className="py-20 flex flex-col items-center justify-center">
+
+              <div
+                className="
+                w-11 h-11
+                rounded-xl
+                bg-[#151515]
+                border border-white/[0.08]
+                flex items-center justify-center
+                mb-4
+                text-[#666]
+                "
+              >
+                &lt;/&gt;
+              </div>
+
+              <h3 className="text-[14px] font-medium text-[#aaa]">
+                No problems found
+              </h3>
+
+              <p className="text-[12px] text-[#505050] mt-1">
+                Try changing your search or filter.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* SYSTEM STATUS */}
+
+        <div
+          className="
+          mt-7
+          flex
+          justify-center
+          items-center
+          gap-2
+          text-[11px]
+          text-[#505050]
+          "
+        >
+          <span
+            className="
+            w-1.5 h-1.5
+            bg-[#888]
+            rounded-full
+            "
+          />
+
+          CodeIt platform
+        </div>
+      </main>
+
+      {/* =====================================================
+                            FOOTER
+      ===================================================== */}
+
+      <footer
+        className="
+        border-t border-white/[0.07]
+        bg-[#060606]
+        "
+      >
+        <div
+          className="
+          max-w-6xl
+          mx-auto
+          px-6 lg:px-8
+          py-8
+          flex
+          flex-col
+          md:flex-row
+          justify-between
+          items-center
+          gap-4
+          "
+        >
+          <div className="flex items-center gap-2">
+
+            <div
+              className="
+              w-6 h-6
+              rounded-md
+              bg-white
+              text-black
+              flex items-center justify-center
+              text-[8px]
+              font-bold
+              "
+            >
+              &lt;/&gt;
+            </div>
+
+            <span className="text-[12px] text-[#555]">
+              © 2026 CodeIt
+            </span>
+          </div>
+
+          <div className="flex gap-6 text-[11px] text-[#555]">
+
+            <a
+              href="#"
+              className="hover:text-white transition-colors"
+            >
+              Terms
+            </a>
+
+            <a
+              href="#"
+              className="hover:text-white transition-colors"
+            >
+              Privacy
+            </a>
+
+            <a
+              href="#"
+              className="hover:text-white transition-colors"
+            >
+              Contact
+            </a>
+
+          </div>
+        </div>
+      </footer>
+
+      {/* AUTH MODAL */}
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() =>
+            setShowAuthModal(false)
+          }
+        />
+      )}
+    </div>
+  );
 }
 
 export default Home;
