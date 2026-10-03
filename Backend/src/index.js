@@ -35,7 +35,7 @@ app.use('/chat', chat)
 
 
 
-const InitalizeConnection = async ()=>{
+const startServer = async ()=>{
    try {
     await main();
     console.log("MongoDB Connected");
@@ -52,4 +52,4 @@ const InitalizeConnection = async ()=>{
 }
 }
 
-InitalizeConnection();
+startServer();
