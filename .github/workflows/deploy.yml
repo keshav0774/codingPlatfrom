@@ -1,0 +1,33 @@
+name: Deploy CodeIT to AWS EC2
+
+on:
+  push:
+    branches:
+      - main  # Jab bhi aap main branch par code push karoge, yeh run hoga
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: SSH into AWS and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_IP }}
+          username: ${{ secrets.AWS_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            cd /var/www/codeit
+            git pull origin main
+            
+            # Backend Build & Restart
+            cd Backend
+            npm install
+            pm2 restart codeit-backend --update-env
+            
+            # Frontend Build
+            cd ../Frontend
+            npm install
+            npm run build

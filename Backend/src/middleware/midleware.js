@@ -40,16 +40,16 @@ const userMiddleware = async (req,res,next)=>{
 const adminMiddleware = async (req,res,next)=>{
 
     try {
-        console.log("admin middleware Called")
+        
         const {token} = req.cookies;
-        console.log(token)
+       
         if(!token)
             throw new Error("Invalid Token")
         
         const payload = jwt.verify(token, process.env.KEY);
 
         const {_id} = payload;
-        console.log(_id)
+       
         if(!_id || payload.role!="Admin")
             throw new Error("Invalid Token");
 

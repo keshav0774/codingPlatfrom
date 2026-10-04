@@ -31,7 +31,7 @@ const register = async (req,res)=>{
     user: reply, 
     message: "User Register Successfully"
    });
-   console.log(reply)
+  
     
     } catch (err) {
         res.status(400).send("Error: " + err.message);
@@ -158,7 +158,7 @@ const emailVerify = async (req,res)=>{
 }
 const adminRegister = async (req,res)=>{
      try {
-        // validate the data
+        
         validate(req.body);
    const {firstName, emailId, password} = req.body;
      
@@ -212,7 +212,7 @@ const deleteProfile = async(req,res)=>{
 const forgetPassword = async(req,res)=>{
 
    try {
-    console.log(req.body)
+   
     const { emailId } = req.body;
     if(!emailId)
         throw new Error("Invalid Credential");

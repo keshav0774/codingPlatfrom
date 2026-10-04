@@ -6,7 +6,7 @@ const {getLanguageById,submitBatched,submitToken} = require('../utlis/problemuti
 
 const createProblem = async (req, res) => {
   try {
-   console.log("req.body:", req.body); 
+   
     const {
       title, description, difficulty, tags, visibleTestCases, hiddenTestCases, startCode, referenceSolution} = req.body;
     if ( !title || !description ||!difficulty ||!referenceSolution) {
@@ -33,7 +33,7 @@ const createProblem = async (req, res) => {
 
       const visibleStatus = await submitToken(visibleTokens);
       for (const test of visibleStatus) {
-        console.log(`Language: ${language}, Status: ${test.status_id}, Stderr: ${test.stderr}, Stdout: ${test.stdout}`)
+        
         if (test.status_id === 6 || test.status_id === 7) {
           return res
             .status(403)
@@ -42,7 +42,7 @@ const createProblem = async (req, res) => {
       }
       
     }
-    await Problem.create({
+    const prob = await Problem.create({
       title,
       description,
       difficulty,
@@ -53,8 +53,18 @@ const createProblem = async (req, res) => {
       referenceSolution,
       problemCreator: req.result._id // auth middleware se
     });
+    const reply = {
+      _id : prob._id,
+     title : prob.title,
+     description : prob.description,
+     difficulty : prob.difficulty,
+     tags : prob.tags
+    }
+    res.status(201).json({
+      message : "Problem saved successfully", 
+      problem : reply
 
-    res.status(201).send("Problem saved successfully");
+    })
 
   } catch (err) {
     console.error(err);
@@ -133,7 +143,7 @@ const deleteProblem = async (req, res)=>{
 
 const getProblemById = async (req,res)=>{
   const {id} = req.params;
-  console.log("Fetching the Problem ")
+ 
   if(!id){
     return res.status(400).send("Invalid Problem Id");
   }
@@ -160,9 +170,9 @@ const getProblemById = async (req,res)=>{
 
 const getAllProblem = async (req,res)=>{
   try {
-    console.log("Api Is called")
+  
     const problems = await Problem.find({}).select('_id title difficulty tags ');
-    console.log("Length:", problems.length)
+   
   if(!problems){
     return res.status(404).send("Problems are not found");
   }
@@ -195,7 +205,7 @@ const submittedProblem = async(req,res)=>{
   try {
       const UserId = req.result._id;
       const ProblemId = req.params.pid;
-     console.log(`user id, ${UserId}, problemID ${ProblemId}`)
+ 
      const ans = await Submission.find({UserId, ProblemId});
      if(ans.length ===0 ) return res.status(200).send([]);
      res.status(200).send(ans);

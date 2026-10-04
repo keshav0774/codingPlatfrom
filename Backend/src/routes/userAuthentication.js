@@ -17,20 +17,7 @@ authRouter.post("/admin/emailverify",emailVerify)
 authRouter.post('/admin/logout', adminMiddleware, logout)
 authRouter.delete('/deleteprofile', userMiddleware, deleteProfile)
 authRouter.post('/forgetPassword', forgetPassword)
-authRouter.get('/check', userMiddleware,  (req,res)=>{
-     
-    const reply = {
-        firstName : req.result.firstName,
-        emailId : req.result.emailId, 
-        _id : req.result._id,
-        role:req.result.role
-    }
-    res.status(200).json({
-        user:reply, 
-        message:"Valid User"
-    })
-    
-})
+
 
 
 module.exports = authRouter;

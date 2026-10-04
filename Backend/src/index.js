@@ -18,6 +18,10 @@ const submitRouter = require('./routes/submit');
 const cors = require('cors');
 const chat = require('./routes/ai');
 
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 
 

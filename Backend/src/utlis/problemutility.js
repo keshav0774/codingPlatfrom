@@ -80,7 +80,7 @@ async function fetchData() {
 }
  while(true){
 const result =  await fetchData();
-   if(!result || !result.submissions) {   // <-- safe check
+   if(!result || !result.submissions) {   
             console.error("Invalid result from Judge0:", result);
       }
       const IsResultObtained = result.submissions.every((r)=>r.status_id > 2)

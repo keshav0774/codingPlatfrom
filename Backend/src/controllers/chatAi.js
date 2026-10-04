@@ -4,11 +4,16 @@ const express = require('express')
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const chatWithAI = async (req, res) => {
+  
+    console.log(
+      "Key available inside controller:",
+      !!process.env.GEMINI_API_KEY
+    );
   try {
     const { message, problemTitle, problemDescription } = req.body;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: message,
       config: {
         systemInstruction: `You are a helpful coding assistant for a competitive programming platform called CodeIt.
