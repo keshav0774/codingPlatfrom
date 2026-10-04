@@ -3,22 +3,22 @@ const User = require('../models/User');
 const redisClient = require('../config/redis');
 
 const userMiddleware = async (req,res,next)=>{
-    console.log("HEADER", req.headers.cookie)
+   
     try {
-        console.log("All Cookies", req.cookie)
+       
         const token = req.cookies.token;
-        console.log("Token:", token ? "Present" : "Missing");
+       
         if(!token)
             throw new Error("Invalid Token")
         
         const payload = jwt.verify(token, process.env.KEY);
-        console.log("Payload", payload)
+        
         const {_id} = payload;
         if(!_id)
             throw new Error("Invalid Token");
 
         const result = await User.findById(_id);
-        console.log("USer", result)
+       
         if(!result)
             throw new Error("Invalid Token");
         

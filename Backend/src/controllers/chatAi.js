@@ -5,10 +5,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const chatWithAI = async (req, res) => {
   
-    console.log(
-      "Key available inside controller:",
-      !!process.env.GEMINI_API_KEY
-    );
+    
   try {
     const { message, problemTitle, problemDescription } = req.body;
 
